@@ -3,6 +3,7 @@ import CryType from "../CryType";
 import Pokemon from "../Pokemon";
 import { saveAs } from "file-saver";
 import cryTypes from "../data/cryTypes";
+window["cryType"] = cryTypes;
 import WaveDiagram from "./WaveDiagram";
 import CryGenerator from "../CryGenerator";
 import pokemonList from "../data/pokemonList";
@@ -320,7 +321,7 @@ class Ui {
  //     this.parseCustomCryTypeCommands();
  //   }
    // this.updateRawCommands(this.selectedCryType);
-    this.parseCryCommands();
+    //this.parseCryCommands();
     this.updateCryTypeCommands(BaseCryManager.get(this.currentBaseCryIdx));
   }
 
@@ -339,6 +340,7 @@ class Ui {
   }
 
   onCommandsInput = () => {
+    this.parseCryCommands();
     this.updateCommands();
   }
 
