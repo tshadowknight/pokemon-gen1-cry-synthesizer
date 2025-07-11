@@ -17,7 +17,7 @@ module.exports = {
   },
   output: {
     filename: "pokemon-gen1-cry-synthesizer.js",
-    path: path.resolve(__dirname, "docs"),
+    path: path.resolve(__dirname, "./"),
     globalObject: "typeof self !== 'undefined' ? self : this",
     library: "pokemon-gen1-cry-synthesizer",
     libraryTarget: "umd"
@@ -26,5 +26,7 @@ module.exports = {
     new webpack.DefinePlugin({
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development")
     })
-  ]
+  ],
+  mode: "development",
+  devtool: "inline-source-map"
 };
