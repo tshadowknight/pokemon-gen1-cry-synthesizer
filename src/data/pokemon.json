@@ -907,8 +907,8 @@
   },
   {
     "name": "New Monster",
-    "cry": 0,
-    "pitch": 128,
+    "cry": 39,
+    "pitch": 0,
     "length": 64
   }
 ]

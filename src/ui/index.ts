@@ -17,7 +17,7 @@ class Ui {
 
   pitch: number;
   length: number;
-  volume: number = 50;
+  volume: number = 100;
 
   customCryType: CryType = {
     name: "Custom",
@@ -66,6 +66,8 @@ class Ui {
   newMonButton: HTMLButtonElement;
   copyMonButton: HTMLButtonElement;
   deleteMonButton: HTMLButtonElement;
+
+  monReferenceRange: number = 151;
 
   init() {
     this.currentBaseCryIdx = 0;
@@ -266,7 +268,7 @@ class Ui {
 
   onSelectedBaseCryChange = () => {
     this.currentBaseCryIdx = this.baseCrySelectorElement.selectedIndex;
-    if(this.currentMonIdx > 151){
+    if(this.currentMonIdx >= this.monReferenceRange){
       MonsterManager.updateCry(this.currentMonIdx, this.currentBaseCryIdx);      
     }
     this.refresh();
@@ -327,7 +329,7 @@ class Ui {
   onPitchChange = (e: Event) => {
     const element = e.currentTarget as HTMLSelectElement;
     const pitch = parseInt(element.value, 10);
-    if(this.currentMonIdx > 151){
+    if(this.currentMonIdx >= this.monReferenceRange){
       MonsterManager.updatePitch(this.currentMonIdx, pitch);      
     }
     this.setPitch(pitch);
@@ -336,7 +338,7 @@ class Ui {
   onLengthChange = (e: Event) => {
     const element = e.currentTarget as HTMLSelectElement;
     const length = parseInt(element.value, 10);
-    if(this.currentMonIdx > 151){
+    if(this.currentMonIdx >= this.monReferenceRange){
       MonsterManager.updateLength(this.currentMonIdx, length);      
     }
     this.setLength(length);
