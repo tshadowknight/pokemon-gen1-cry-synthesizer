@@ -8,6 +8,7 @@ import WaveDiagram from "./WaveDiagram";
 import CryGenerator from "../CryGenerator";
 import pokemonList from "../data/pokemonList";
 import { BaseCryManager } from "../data/BaseCryManager";
+import { MonsterManager } from "../data/MonsterManager";
 
 class Ui {
   selectedPokemon: Pokemon;
@@ -59,9 +60,16 @@ class Ui {
   baseCryNameInput: HTMLInputElement;
 
   currentBaseCryIdx: number;
+  currentMonIdx: number;
+
+  monCryNameInput: HTMLInputElement;
+  newMonButton: HTMLButtonElement;
+  copyMonButton: HTMLButtonElement;
+  deleteMonButton: HTMLButtonElement;
 
   init() {
     this.currentBaseCryIdx = 0;
+    this.currentMonIdx = 0;
 
     this.waveDiagramElement = document.querySelector<SVGElement>("#wave-diagram");
 
@@ -82,8 +90,6 @@ class Ui {
 
     this.playButtonElement = document.querySelector<HTMLButtonElement>("#play");
     this.playButtonElement.addEventListener("click", this.onPlayClick);
-
-   
 
     this.newBaseCryButton = document.querySelector<HTMLButtonElement>("#new");
     this.newBaseCryButton.addEventListener("click", this.onBaseCryNewClick);
@@ -118,10 +124,23 @@ class Ui {
     this.baseCryNameInput = document.querySelector<HTMLInputElement>("#name");
     this.baseCryNameInput.addEventListener("change", this.onBaseCryNameChange);
 
-     
+
+    this.monCryNameInput = document.querySelector<HTMLInputElement>("#mon_name");
+    this.monCryNameInput.addEventListener("change", this.onMonNameChange);
+
+    this.newMonButton = document.querySelector<HTMLButtonElement>("#mon_new");
+    this.newMonButton.addEventListener("click", this.onMonNewClick);
+
+    this.copyMonButton = document.querySelector<HTMLButtonElement>("#mon_copy");
+    this.copyMonButton.addEventListener("click", this.onMonCopyClick);
+
+    this.deleteMonButton = document.querySelector<HTMLButtonElement>("#mon_delete");
+    this.deleteMonButton.addEventListener("click", this.onMonDeleteClick);    
 
 
     this.createElements();
+    this.selectPokemon();
+    this.updateCommands();
    
   }
 
@@ -132,11 +151,14 @@ class Ui {
   createElements(){
    let index = 0;
    this.selectedPokemonSelectElement.innerHTML = "";
-    for (const pokemon of pokemonList) {
+    for (const pokemon of MonsterManager.data) {
       const option = util.createSelectOption(`#${index + 1}: ${pokemon.name}`, index.toString());
       this.selectedPokemonSelectElement.appendChild(option);
       index++;
     }
+    this.selectedPokemonSelectElement.selectedIndex = this.currentMonIdx;
+
+    this.monCryNameInput.value = MonsterManager.get(this.currentMonIdx).name;
 
     /*this.selectedCryTypeSelectElement.innerHTML = "";
     index = 0;
@@ -163,7 +185,7 @@ class Ui {
 
     this.waveDiagram = new WaveDiagram(this.waveDiagramElement);
 
-    this.selectPokemon(pokemonList[0]);
+   // 
     this.updateCommands();
   }
 
@@ -176,12 +198,14 @@ class Ui {
   generateData() {
     this.updateCommands();
 
+    const currentChannels = BaseCryManager.get(this.currentBaseCryIdx).channels;
+
     this.cryGenerator.init();
     const {
       pulse1,
       pulse2,
       noise
-    } = this.cryGenerator.generate(this.selectedCryType, this.pitch, this.length);
+    } = this.cryGenerator.generate(currentChannels, this.pitch, this.length);
 
     const waves: number[][] = [];
     if (this.pulse1EnabledElement.checked) {
@@ -203,6 +227,10 @@ class Ui {
       noise,
       data
     };
+  }
+
+  updateCurrentMonsterSettings(){
+    
   }
 
   mixWaves(waves: number[][], reduction: number) {
@@ -238,6 +266,9 @@ class Ui {
 
   onSelectedBaseCryChange = () => {
     this.currentBaseCryIdx = this.baseCrySelectorElement.selectedIndex;
+    if(this.currentMonIdx > 151){
+      MonsterManager.updateCry(this.currentMonIdx, this.currentBaseCryIdx);      
+    }
     this.refresh();
   }
 
@@ -245,6 +276,29 @@ class Ui {
     BaseCryManager.updateName(this.currentBaseCryIdx, this.baseCryNameInput.value);
     this.refresh();
   }
+
+  onMonNameChange = () => {
+    MonsterManager.updateName(this.currentMonIdx, this.monCryNameInput.value);
+    this.refresh();
+  }
+
+  onMonNewClick = () => {
+    const newIdx = MonsterManager.addNew();
+    this.currentMonIdx = newIdx;
+    this.refresh();
+  }
+
+  onMonCopyClick = () => {
+    const newIdx = MonsterManager.copy(this.currentMonIdx);
+    this.currentMonIdx = newIdx;
+    this.refresh();
+  }
+
+  onMonDeleteClick = () => {
+    MonsterManager.delete(this.currentMonIdx);
+    this.currentMonIdx = 0;
+    this.refresh();
+  }  
 
   onPlayClick = () => {
     const {
@@ -273,12 +327,18 @@ class Ui {
   onPitchChange = (e: Event) => {
     const element = e.currentTarget as HTMLSelectElement;
     const pitch = parseInt(element.value, 10);
+    if(this.currentMonIdx > 151){
+      MonsterManager.updatePitch(this.currentMonIdx, pitch);      
+    }
     this.setPitch(pitch);
   }
 
   onLengthChange = (e: Event) => {
     const element = e.currentTarget as HTMLSelectElement;
     const length = parseInt(element.value, 10);
+    if(this.currentMonIdx > 151){
+      MonsterManager.updateLength(this.currentMonIdx, length);      
+    }
     this.setLength(length);
   }
 
@@ -298,12 +358,15 @@ class Ui {
     this.length = value;
   }
 
-  selectPokemon = (pokemon: Pokemon) => {
+  selectPokemon = () => {
+    const pokemon = MonsterManager.get(this.currentMonIdx);
     this.selectedPokemon = pokemon;
-
-    this.selectCryType(cryTypes[pokemon.cry]);
+    this.currentBaseCryIdx = pokemon.cry;
+    this.refresh();  
+    //this.selectCryType(cryTypes[pokemon.cry]);
     this.setPitch(pokemon.pitch);
     this.setLength(pokemon.length - 0x80);
+    //this.refresh();
   }
 
   selectCryType = (cryType: CryType) => {
@@ -326,9 +389,8 @@ class Ui {
   }
 
   onSelectedPokemonChange = (e: Event) => {
-    const element = e.currentTarget as HTMLInputElement;
-    const pokemon = pokemonList[element.value];
-    this.selectPokemon(pokemon);
+    this.currentMonIdx = this.selectedPokemonSelectElement.selectedIndex;
+    this.selectPokemon();   
     this.updateCommands();
   }
 
@@ -341,7 +403,7 @@ class Ui {
 
   onCommandsInput = () => {
     this.parseCryCommands();
-    this.updateCommands();
+    //this.updateCommands();
   }
 
   download = () => {
@@ -382,7 +444,7 @@ class Ui {
       if (command[0] === "duty") {
         pulse1.push({ "duty": parseInt(command[1]) });
       } else if (command[0] === "note") {
-        pulse1.push({ "note": [parseInt(command[1]) - 1, parseInt(command[2]), parseInt(command[3]), parseInt(command[4])] });
+        pulse1.push({ "note": [parseInt(command[1]), parseInt(command[2]), parseInt(command[3]), parseInt(command[4])] });
       }
     }
     newCommands.pulse1 = pulse1;
@@ -393,7 +455,7 @@ class Ui {
       if (command[0] === "duty") {
         pulse2.push({ "duty": parseInt(command[1]) });
       } else if (command[0] === "note") {
-        pulse2.push({ "note": [parseInt(command[1]) - 1, parseInt(command[2]), parseInt(command[3]), parseInt(command[4])] });
+        pulse2.push({ "note": [parseInt(command[1]), parseInt(command[2]), parseInt(command[3]), parseInt(command[4])] });
       }
     }
     newCommands.pulse2 = pulse2;
@@ -402,7 +464,7 @@ class Ui {
     for (let index = 0; index < noiseCommands.length; index++) {
       const command = noiseCommands[index].split(" ");
       if (command[0] === "note") {
-        noise.push({ "note": [parseInt(command[1]) - 1, parseInt(command[2]), parseInt(command[3]), parseInt(command[4])] });
+        noise.push({ "note": [parseInt(command[1]), parseInt(command[2]), parseInt(command[3]), parseInt(command[4])] });
       }
     }
     newCommands.noise = noise;
@@ -421,7 +483,7 @@ class Ui {
       } else if (cry.pulse1[index].note) {
         this.pulse1CommandsElement.value = this.pulse1CommandsElement.value +
           "note " +
-          (cry.pulse1[index].note[0] + 1) + " " +
+          (cry.pulse1[index].note[0]) + " " +
           cry.pulse1[index].note[1] + " " +
           cry.pulse1[index].note[2] + " " +
           cry.pulse1[index].note[3] + "\n";
@@ -433,12 +495,12 @@ class Ui {
     for (let index = 0; index < cry.pulse2.length; index++) {
       if (cry.pulse2[index].duty !== undefined) {
         this.pulse2CommandsElement.value = this.pulse2CommandsElement.value +
-          "duty 0x" + cry.pulse2[index].duty.toString(0x20) + "\n";
+          "duty 0x" + cry.pulse2[index].duty.toString(0x10) + "\n";
       } else if (cry.pulse2[index].note) {
         this.pulse2CommandsElement.value = this.pulse2CommandsElement.value +
           "note " +
-          (cry.pulse2[index].note[0] + 2) + " " +
-          cry.pulse2[index].note[2] + " " +
+          (cry.pulse2[index].note[0]) + " " +
+          cry.pulse2[index].note[1] + " " +
           cry.pulse2[index].note[2] + " " +
           cry.pulse2[index].note[3] + "\n";
       }
@@ -450,7 +512,7 @@ class Ui {
       if (cry.noise[index].note) {
         this.noiseCommandsElement.value = this.noiseCommandsElement.value +
           "note " +
-          (cry.noise[index].note[0] + 1) + " " +
+          (cry.noise[index].note[0]) + " " +
           cry.noise[index].note[1] + " " +
           cry.noise[index].note[2] + " 0x" +
           cry.noise[index].note[3].toString(0x10) + "\n";
