@@ -6,6 +6,7 @@ import cryTypes from "../data/cryTypes";
 import WaveDiagram from "./WaveDiagram";
 import CryGenerator from "../CryGenerator";
 import pokemonList from "../data/pokemonList";
+import { BaseCryManager } from "../data/BaseCryManager";
 
 class Ui {
   selectedPokemon: Pokemon;
@@ -32,6 +33,10 @@ class Ui {
   playButtonElement: HTMLButtonElement;
   downloadButtonElement: HTMLButtonElement;
 
+  newBaseCryButton: HTMLButtonElement;
+  copyBaseCryButton: HTMLButtonElement;
+  deleteBaseCryButton: HTMLButtonElement;
+
   selectedPokemonSelectElement: HTMLSelectElement;
   selectedCryTypeSelectElement: HTMLSelectElement;
 
@@ -48,14 +53,22 @@ class Ui {
   noiseCommandsElement: HTMLTextAreaElement;
   rawCommandsElement: HTMLTextAreaElement;
 
+  baseCrySelectorElement: HTMLSelectElement;
+
+  baseCryNameInput: HTMLInputElement;
+
+  currentBaseCryIdx: number;
+
   init() {
+    this.currentBaseCryIdx = 0;
+
     this.waveDiagramElement = document.querySelector<SVGElement>("#wave-diagram");
 
     this.selectedPokemonSelectElement = document.querySelector<HTMLSelectElement>("#selected-pokemon");
     this.selectedPokemonSelectElement.addEventListener("change", this.onSelectedPokemonChange);
 
-    this.selectedCryTypeSelectElement = document.querySelector<HTMLSelectElement>("#selected-cry-type");
-    this.selectedCryTypeSelectElement.addEventListener("change", this.onCryTypeChange);
+   // this.selectedCryTypeSelectElement = document.querySelector<HTMLSelectElement>("#selected-cry-type");
+   // this.selectedCryTypeSelectElement.addEventListener("change", this.onCryTypeChange);
 
     this.pitchInputElement = document.querySelector<HTMLInputElement>("#pitch");
     this.pitchInputElement.addEventListener("change", this.onPitchChange);
@@ -68,6 +81,17 @@ class Ui {
 
     this.playButtonElement = document.querySelector<HTMLButtonElement>("#play");
     this.playButtonElement.addEventListener("click", this.onPlayClick);
+
+   
+
+    this.newBaseCryButton = document.querySelector<HTMLButtonElement>("#new");
+    this.newBaseCryButton.addEventListener("click", this.onBaseCryNewClick);
+
+    this.copyBaseCryButton = document.querySelector<HTMLButtonElement>("#copy");
+    this.copyBaseCryButton.addEventListener("click", this.onBaseCryCopyClick);
+
+    this.deleteBaseCryButton = document.querySelector<HTMLButtonElement>("#delete");
+    this.deleteBaseCryButton.addEventListener("click", this.onBaseCryDeleteClick);
 
     this.downloadButtonElement = document.querySelector<HTMLButtonElement>("#download");
     this.downloadButtonElement.addEventListener("click", this.download);
@@ -85,15 +109,35 @@ class Ui {
     this.noiseCommandsElement = document.querySelector<HTMLTextAreaElement>("#noisecmds");
     this.noiseCommandsElement.addEventListener("input", this.onCommandsInput);
 
-    this.rawCommandsElement = document.querySelector<HTMLTextAreaElement>("#rawcmds");
+    //this.rawCommandsElement = document.querySelector<HTMLTextAreaElement>("#rawcmds");
 
-    let index = 0;
+    this.baseCrySelectorElement = document.querySelector<HTMLSelectElement>("#selected-basecry");
+    this.baseCrySelectorElement.addEventListener("change", this.onSelectedBaseCryChange);
+
+    this.baseCryNameInput = document.querySelector<HTMLInputElement>("#name");
+    this.baseCryNameInput.addEventListener("change", this.onBaseCryNameChange);
+
+     
+
+
+    this.createElements();
+   
+  }
+
+  refresh(){
+    this.createElements();
+  }
+
+  createElements(){
+   let index = 0;
+   this.selectedPokemonSelectElement.innerHTML = "";
     for (const pokemon of pokemonList) {
       const option = util.createSelectOption(`#${index + 1}: ${pokemon.name}`, index.toString());
       this.selectedPokemonSelectElement.appendChild(option);
       index++;
     }
 
+    /*this.selectedCryTypeSelectElement.innerHTML = "";
     index = 0;
     for (const cryType of this.cryTypes) {
       const name = this.getCryTypeName(cryType);
@@ -102,7 +146,19 @@ class Ui {
       const option = util.createSelectOption(name, value);
       this.selectedCryTypeSelectElement.appendChild(option);
       index++;
+    }*/
+
+    this.baseCrySelectorElement.innerHTML = "";
+    index = 0;
+    for (const baseCry of BaseCryManager.data) {
+      const option = util.createSelectOption(`#${index + 1}: ${baseCry.name}`, index.toString());
+      this.baseCrySelectorElement.appendChild(option);
+      index++;
     }
+
+    this.baseCryNameInput.value = BaseCryManager.get(this.currentBaseCryIdx).name;
+
+    this.baseCrySelectorElement.selectedIndex = this.currentBaseCryIdx;
 
     this.waveDiagram = new WaveDiagram(this.waveDiagramElement);
 
@@ -159,6 +215,34 @@ class Ui {
     }
 
     return data;
+  }
+
+  onBaseCryNewClick = () => {
+    const newIdx = BaseCryManager.addNew();
+    this.currentBaseCryIdx = newIdx;
+    this.refresh();
+  }
+
+  onBaseCryCopyClick = () => {
+    const newIdx = BaseCryManager.copy(this.baseCrySelectorElement.selectedIndex);
+    this.currentBaseCryIdx = newIdx;
+    this.refresh();
+  }
+
+  onBaseCryDeleteClick = () => {
+    BaseCryManager.delete(this.baseCrySelectorElement.selectedIndex);
+    this.currentBaseCryIdx = 0;
+    this.refresh();
+  }
+
+  onSelectedBaseCryChange = () => {
+    this.currentBaseCryIdx = this.baseCrySelectorElement.selectedIndex;
+    this.refresh();
+  }
+
+  onBaseCryNameChange = () => {
+    BaseCryManager.updateName(this.currentBaseCryIdx, this.baseCryNameInput.value);
+    this.refresh();
   }
 
   onPlayClick = () => {
@@ -226,16 +310,18 @@ class Ui {
 
     this.selectedCryTypeIndex = this.cryTypes.indexOf(cryType);
     this.selectedCryType = cryType;
-    this.selectedCryTypeSelectElement.value = this.selectedCryTypeIndex.toString();
+    //this.selectedCryTypeSelectElement.value = this.selectedCryTypeIndex.toString();
   }
 
   updateCommands() {
-    if (this.selectedCryType !== this.customCryType) {
-      this.updateCryTypeCommands(this.selectedCryType);
-    } else {
-      this.parseCustomCryTypeCommands();
-    }
-    this.updateRawCommands(this.selectedCryType);
+   // if (this.selectedCryType !== this.customCryType) {
+  //    this.updateCryTypeCommands(this.selectedCryType);
+  //  } else {
+ //     this.parseCustomCryTypeCommands();
+ //   }
+   // this.updateRawCommands(this.selectedCryType);
+    this.parseCryCommands();
+    this.updateCryTypeCommands(BaseCryManager.get(this.currentBaseCryIdx));
   }
 
   onSelectedPokemonChange = (e: Event) => {
@@ -253,11 +339,7 @@ class Ui {
   }
 
   onCommandsInput = () => {
-    if (this.customCryType !== this.selectedCryType) {
-      this.selectCryType(this.customCryType);
-    } else {
-      this.updateCommands();
-    }
+    this.updateCommands();
   }
 
   download = () => {
@@ -281,10 +363,16 @@ class Ui {
     saveAs(blob, `${filename}.wav`);
   }
 
-  parseCustomCryTypeCommands() {
+  parseCryCommands() {
     const pulse1Commands = this.pulse1CommandsElement.value.split("\n");
     const pulse2Commands = this.pulse2CommandsElement.value.split("\n");
     const noiseCommands = this.noiseCommandsElement.value.split("\n");
+
+    const newCommands = {
+      pulse1: [],
+      pulse2: [],
+      noise: []
+    };
 
     const pulse1 = [];
     for (let index = 0; index < pulse1Commands.length; index++) {
@@ -295,7 +383,7 @@ class Ui {
         pulse1.push({ "note": [parseInt(command[1]) - 1, parseInt(command[2]), parseInt(command[3]), parseInt(command[4])] });
       }
     }
-    this.customCryType.pulse1 = pulse1;
+    newCommands.pulse1 = pulse1;
 
     const pulse2 = [];
     for (let index = 0; index < pulse2Commands.length; index++) {
@@ -306,7 +394,7 @@ class Ui {
         pulse2.push({ "note": [parseInt(command[1]) - 1, parseInt(command[2]), parseInt(command[3]), parseInt(command[4])] });
       }
     }
-    this.customCryType.pulse2 = pulse2;
+    newCommands.pulse2 = pulse2;
 
     const noise = [];
     for (let index = 0; index < noiseCommands.length; index++) {
@@ -315,10 +403,14 @@ class Ui {
         noise.push({ "note": [parseInt(command[1]) - 1, parseInt(command[2]), parseInt(command[3]), parseInt(command[4])] });
       }
     }
-    this.customCryType.noise = noise;
+    newCommands.noise = noise;
+
+    BaseCryManager.updateChannels(this.currentBaseCryIdx, newCommands);
   }
 
-  updateCryTypeCommands(cry: CryType) {
+  updateCryTypeCommands(cryInfo) {
+    const cry = cryInfo.channels;
+    this.pulse1CommandsElement.disabled = cryInfo.isReference;
     this.pulse1CommandsElement.value = "";
     for (let index = 0; index < cry.pulse1.length; index++) {
       if (cry.pulse1[index].duty !== undefined) {
@@ -335,6 +427,7 @@ class Ui {
     }
 
     this.pulse2CommandsElement.value = "";
+    this.pulse2CommandsElement.disabled = cryInfo.isReference;
     for (let index = 0; index < cry.pulse2.length; index++) {
       if (cry.pulse2[index].duty !== undefined) {
         this.pulse2CommandsElement.value = this.pulse2CommandsElement.value +
@@ -350,6 +443,7 @@ class Ui {
     }
 
     this.noiseCommandsElement.value = "";
+    this.noiseCommandsElement.disabled = cryInfo.isReference;
     for (let index = 0; index < cry.noise.length; index++) {
       if (cry.noise[index].note) {
         this.noiseCommandsElement.value = this.noiseCommandsElement.value +
@@ -362,7 +456,7 @@ class Ui {
     }
   }
 
-  updateRawCommands(cryType: CryType) {
+ /* updateRawCommands(cryType: CryType) {
     let content = "";
 
     const pulse1 = cryType.pulse1;
@@ -414,7 +508,7 @@ class Ui {
     content += "FF ";
 
     this.rawCommandsElement.value = content;
-  }
+  }*/
 }
 
 export default new Ui();

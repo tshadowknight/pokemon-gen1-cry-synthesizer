@@ -23,29 +23,20 @@
   </strong>
   <br />
   <br />
-  <select id="selected-pokemon"></select> |
-  <button id="play">Play</button> |
-  <button id="download">Download</button> |
-  Type: <select id="selected-cry-type"></select> |
-  Pitch (0...255): <input style="width:50px;" id="pitch" type="number" min="0" max="255" /> |
-  Length (-128...127): <input style="width:50px;" id="length" type="number" min="-128" max="127" />
-  <br />
-  Volume <input style="width:50px;" id="volume" type="number" value="50" min="0" max="255" /> |
-  Pulse1 <input id="pulse1-enabled" type="checkbox" checked /> |
-  Pulse2 <input id="pulse2-enabled" type="checkbox" checked /> |
-  Noise <input id="noise-enabled" type="checkbox" checked />
-  <br />
+
+<select id='selected-basecry'></select> |
+<input id='name'></input>
+<button id="new">New</button> |
+<button id="copy">Copy</button> |
+<button id="delete">Delete</button> |
+
+  <br>
+
   <textarea id="pulse1cmds" cols="18" rows="10"></textarea> |
   <textarea id="pulse2cmds" cols="18" rows="10"></textarea> |
   <textarea id="noisecmds" cols="18" rows="10"></textarea> |
-  <textarea id="rawcmds" cols="18" rows="10" readonly></textarea>
-  <br />
-
-  <strong>Don't know what's going on here?</strong> Check out <a href="https://www.youtube.com/watch?v=gDLpbFXnpeY">the
-    video</a>!
-  <br />
-  <br />
-
+  <!--textarea id="rawcmds" cols="18" rows="10" readonly></textarea-->
+    <br />
   <strong>Commands</strong>
   <ul>
     <li><tt><strong>duty</strong> &lt;pattern(0...255)&gt;</tt></li>
@@ -54,6 +45,28 @@
     <li><tt><s><strong>loop</strong> <em>unsupported</em></s></tt></li>
     <li><tt><s><strong>end</strong> <em>unsupported</em></s></tt></li>
   </ul>
+
+  
+  <select id="selected-pokemon"></select> |
+  <button id="play">Play</button> |
+  <button id="download">Download</button> |
+  Pitch (0...255): <input style="width:50px;" id="pitch" type="number" min="0" max="255" /> |
+  Length (-128...127): <input style="width:50px;" id="length" type="number" min="-128" max="127" />
+  <br />
+  Volume <input style="width:50px;" id="volume" type="number" value="50" min="0" max="255" /> |
+  Pulse1 <input id="pulse1-enabled" type="checkbox" checked /> |
+  Pulse2 <input id="pulse2-enabled" type="checkbox" checked /> |
+  Noise <input id="noise-enabled" type="checkbox" checked />
+  <br />
+
+  <br />
+
+  <strong>Don't know what's going on here?</strong> Check out <a href="https://www.youtube.com/watch?v=gDLpbFXnpeY">the
+    video</a>!
+  <br />
+  <br />
+
+
   <strong>Notes</strong>
   <ul>
     <li>Synthesized at 1048576 Hz. Resampled at 48000 Hz (browser dependent) to play in your browser. Exported
